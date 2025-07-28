@@ -1,10 +1,20 @@
 ﻿namespace LibMpv.MVVM;
 
-public enum PlayerState
+public enum FileState
 {
-    DoesNotPlay,
-    Playing,
+    Closed,
     Loading,
     Buffering,
-    Paused
+    Loaded,
+}
+
+public enum PlayerState
+{
+    Playing,
+
+    Paused,
+    /// <summary>
+    /// 播放完毕
+    /// </summary>
+    End
 }

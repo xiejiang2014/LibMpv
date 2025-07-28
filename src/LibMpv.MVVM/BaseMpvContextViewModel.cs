@@ -3,18 +3,25 @@ using CommunityToolkit.Mvvm.Input;
 using LibMpv.Client;
 using System;
 using System.Globalization;
+using System.Threading;
 
 namespace LibMpv.MVVM;
 
 [ObservableObject]
-public abstract partial class BaseMpvContextViewModel: MpvContext
+public abstract partial class BaseMpvContextViewModel : MpvContext
 {
-    PlayerState playerState = PlayerState.DoesNotPlay;
-    public PlayerState PlayerState => playerState;
+    public FileState FileState { get; private set; } = FileState.Closed;
 
-    public event Action<PlayerState,PlayerState> PlayerStateChanging;
 
-    public event Action<PlayerState> PlayerStateChanged;
+    PlayerState        _playerState = PlayerState.Playing;
+    public PlayerState PlayerState => _playerState;
+
+    public event Action<PlayerState, PlayerState> PlayerStateChanging;
+    public event Action<PlayerState>              PlayerStateChanged;
+
+    public event Action<FileState, FileState> FileStateChanging;
+    public event Action<FileState>            FileStateChanged;
+
 
     public bool IsPaused
     {
@@ -80,9 +87,10 @@ public abstract partial class BaseMpvContextViewModel: MpvContext
         }
         set
         {
-            if (value == null ) return;
-            var position = (long)value.TotalSeconds;
-            this.Command("seek", position.ToString(CultureInfo.InvariantCulture), "absolute");
+            if (value == null) return;
+            var position       = value.TotalSeconds;
+            var positionString = position.ToString(CultureInfo.InvariantCulture);
+            this.Command("seek", positionString, "absolute");
         }
     }
 
@@ -91,7 +99,7 @@ public abstract partial class BaseMpvContextViewModel: MpvContext
         get => this.GetPropertyLong("percent-pos") ?? 0;
         set
         {
-            if (value >=0 && value <= 100)
+            if (value >= 0 && value <= 100)
                 this.SetPropertyLong("percent-pos", value);
         }
     }
@@ -112,9 +120,9 @@ public abstract partial class BaseMpvContextViewModel: MpvContext
     public BaseMpvContextViewModel()
     {
         InitPropertyObserver();
-        this.EndFile += Context_EndFile;
+        this.EndFile    += Context_EndFile;
         this.FileLoaded += Context_FileLoaded;
-        this.StartFile += Context_StartFile;
+        this.StartFile  += Context_StartFile;
     }
 
     public abstract void InvokeInUIThread(Action action);
@@ -124,24 +132,48 @@ public abstract partial class BaseMpvContextViewModel: MpvContext
         InvokeInUIThread(() => OnPropertyChanged(propertyName));
     }
 
+
+    private void SetFileState(FileState newState)
+    {
+        System.Diagnostics.Debug.WriteLine($"Changing FileState to : {newState}");
+
+        FileStateChanging?.Invoke(FileState, newState);
+
+        FileState = newState;
+
+        OnPropertyChanged(nameof(FileState));
+
+        FileStateChanged?.Invoke(FileState);
+
+        InvokeInUIThread(() =>
+                         {
+                             StopCommand.NotifyCanExecuteChanged();
+                             PlayCommand.NotifyCanExecuteChanged();
+                             PauseCommand.NotifyCanExecuteChanged();
+                             TogglePlayPauseCommand.NotifyCanExecuteChanged();
+                         });
+    }
+
+
     private void SetPlayerState(PlayerState newState)
     {
-        System.Diagnostics.Debug.WriteLine($"Player state: {newState}");
+        System.Diagnostics.Debug.WriteLine($"Changing player state to : {newState}");
+
+        PlayerStateChanging?.Invoke(_playerState, newState);
+
+        _playerState = newState;
+
+        OnPropertyChanged(nameof(PlayerState));
+
+        PlayerStateChanged?.Invoke(_playerState);
+
         InvokeInUIThread(() =>
-        {
-            PlayerStateChanging?.Invoke(playerState, newState);
-
-            playerState = newState;
-
-            OnPropertyChanged(nameof(PlayerState));
-
-            PlayerStateChanged?.Invoke(playerState);
-
-            StopCommand.NotifyCanExecuteChanged();
-            PlayCommand.NotifyCanExecuteChanged();
-            PauseCommand.NotifyCanExecuteChanged();
-            TogglePlayPauseCommand.NotifyCanExecuteChanged();
-        });
+                         {
+                             StopCommand.NotifyCanExecuteChanged();
+                             PlayCommand.NotifyCanExecuteChanged();
+                             PauseCommand.NotifyCanExecuteChanged();
+                             TogglePlayPauseCommand.NotifyCanExecuteChanged();
+                         });
     }
 
     [RelayCommand]
@@ -180,7 +212,7 @@ public abstract partial class BaseMpvContextViewModel: MpvContext
 
     bool CanStop()
     {
-        return PlayerState != PlayerState.DoesNotPlay;
+        return FileState != FileState.Closed;
     }
 
     [RelayCommand(CanExecute = nameof(CanTogglePlayPause))]
@@ -202,7 +234,7 @@ public abstract partial class BaseMpvContextViewModel: MpvContext
 
     bool CanPlay()
     {
-        return this.PlayerState == PlayerState.Paused;
+        return FileState == FileState.Loaded && PlayerState == PlayerState.Paused;
     }
 
     [RelayCommand(CanExecute = nameof(CanPause))]
@@ -213,24 +245,36 @@ public abstract partial class BaseMpvContextViewModel: MpvContext
 
     bool CanPause()
     {
-        return this.PlayerState == PlayerState.Playing;
+        return FileState == FileState.Loaded && PlayerState == PlayerState.Playing;
     }
 
     private void Context_StartFile(object sender, EventArgs e)
     {
-        SetPlayerState(PlayerState.Loading);
+        SetFileState(FileState.Loading);
     }
 
     private void Context_FileLoaded(object sender, EventArgs e)
     {
-        SetPlayerState(PlayerState.Playing);
+        SetFileState(FileState.Loaded);
+
+        if (IsPaused)
+        {
+            SetPlayerState(PlayerState.Paused);
+        }
+        else
+        {
+            SetPlayerState(PlayerState.Playing);
+        }
     }
 
     private void Context_EndFile(object sender, MpvEndFileEventArgs e)
     {
-        SetPlayerState(PlayerState.DoesNotPlay);
+        SetFileState(FileState.Closed);
+        SetPlayerState(PlayerState.End);
     }
 
+    //实测 调用本函数后,PlayerState 会是 Loading 并立即返回, 如果在 Loading 状态下设置某些属性比如 TimePos, 会导致异常
+    //另外,如果播放状态是 Playing 那么 LoadFile 完成后会自动播放, 如果播放状态是 Pause 那么 LoadFile 完成后会暂停
     public void LoadFile(string fileName, string mode = "replace")
     {
         Command("loadfile", fileName, mode);
@@ -253,45 +297,53 @@ public abstract partial class BaseMpvContextViewModel: MpvContext
 
     protected virtual void InitPropertyObserver()
     {
-        this.ObserveProperty("paused-for-cache", (bool isBuffering) => 
-        {
-            RaisePropertyChangedInUIThread(nameof(IsBuffering));
-            if (isBuffering)
-                SetPlayerState(PlayerState.Buffering);
-            else if (!String.IsNullOrEmpty(Path))
-            {
-                if (this.PlayerState != PlayerState.Playing)
-                    SetPlayerState(PlayerState.Playing);
-            }
-            else
-            {
-                SetPlayerState(PlayerState.DoesNotPlay);
-            }
-        });
+        this.ObserveProperty("paused-for-cache", (bool isBuffering) =>
+                                                 {
+                                                     RaisePropertyChangedInUIThread(nameof(IsBuffering));
+                                                     if (isBuffering)
+                                                     {
+                                                         SetFileState(FileState.Buffering);
+                                                     }
+                                                     else if (!String.IsNullOrEmpty(Path))
+                                                     {
+                                                         if (FileState != FileState.Loaded)
+                                                         {
+                                                             SetFileState(FileState.Loaded);
+                                                         }
+                                                     }
+                                                     else
+                                                     {
+                                                         SetFileState(FileState.Closed);
+                                                     }
+                                                 });
 
         this.ObserveProperty("pause", (bool isPaused) =>
-        {
-            RaisePropertyChangedInUIThread(nameof(IsPaused));
-            if (isPaused)
-                SetPlayerState(PlayerState.Paused);
-            else if  (!String.IsNullOrEmpty(Path))
-                SetPlayerState(PlayerState.Playing);
-            else
-            {
-                SetPlayerState(PlayerState.DoesNotPlay);
-            }
-        });
+                                      {
+                                          RaisePropertyChangedInUIThread(nameof(IsPaused));
+
+                                          if (isPaused)
+                                          {
+                                              SetPlayerState(PlayerState.Paused);
+                                          }
+                                          else if (!String.IsNullOrEmpty(Path))
+                                          {
+                                              SetPlayerState(PlayerState.Playing);
+                                          }
+                                          else
+                                          {
+                                              SetFileState(FileState.Closed);
+                                          }
+                                      });
 
 
-        this.ObserveProperty("cache-buffering-state", () => RaisePropertyChangedInUIThread(nameof(CacheBufferingState)) );
-        this.ObserveProperty("duration", () => RaisePropertyChangedInUIThread(nameof(Duration)) );
-        this.ObserveProperty("time-pos", () => RaisePropertyChangedInUIThread(nameof(TimePos)) );
-        this.ObserveProperty("time-remaining", () => RaisePropertyChangedInUIThread(nameof(TimeRemaining)) );
-        this.ObserveProperty("mute", () => RaisePropertyChangedInUIThread(nameof(IsMuted)) );
-        this.ObserveProperty("volume", () => RaisePropertyChangedInUIThread(nameof(Volume)) );
-        this.ObserveProperty("seekable", () => RaisePropertyChangedInUIThread(nameof(IsSeekable)) );
-        this.ObserveProperty("path", () => RaisePropertyChangedInUIThread(nameof(Path)) );
-        this.ObserveProperty("percent-pos", () => RaisePropertyChangedInUIThread(nameof(PercentPos)) );
+        this.ObserveProperty("cache-buffering-state", () => RaisePropertyChangedInUIThread(nameof(CacheBufferingState)));
+        this.ObserveProperty("duration",              () => RaisePropertyChangedInUIThread(nameof(Duration)));
+        this.ObserveProperty("time-pos",              () => RaisePropertyChangedInUIThread(nameof(TimePos)));
+        this.ObserveProperty("time-remaining",        () => RaisePropertyChangedInUIThread(nameof(TimeRemaining)));
+        this.ObserveProperty("mute",                  () => RaisePropertyChangedInUIThread(nameof(IsMuted)));
+        this.ObserveProperty("volume",                () => RaisePropertyChangedInUIThread(nameof(Volume)));
+        this.ObserveProperty("seekable",              () => RaisePropertyChangedInUIThread(nameof(IsSeekable)));
+        this.ObserveProperty("path",                  () => RaisePropertyChangedInUIThread(nameof(Path)));
+        this.ObserveProperty("percent-pos",           () => RaisePropertyChangedInUIThread(nameof(PercentPos)));
     }
-  
 }

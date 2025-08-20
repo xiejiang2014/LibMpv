@@ -23,7 +23,7 @@ public partial class MainViewModel : BaseMpvContextViewModel
     [RelayCommand]
     private void PlayBigBuckBunny()
     {
-        this.LoadFile("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4");
+        this.LoadFile("D:\\学习\\小猪佩奇第一季——第六季全 国语无字\\小猪佩奇第二季.Peppa.Pig.Season.2.E04.4K.WEB-DL.H265.AAC-OurTV.mp4");
         this.Play();
     }
 

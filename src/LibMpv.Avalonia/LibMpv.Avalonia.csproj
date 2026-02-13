@@ -6,10 +6,12 @@
 		<Nullable>enable</Nullable>
 		<IsAndroid>false</IsAndroid>
 		<IsAndroid Condition="'$([MSBuild]::GetTargetPlatformIdentifier($(TargetFramework)))'=='android'">true</IsAndroid>
+		<AssemblyVersion>1.0.0.9533</AssemblyVersion>
+		<FileVersion>1.0.0.9533</FileVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Avalonia" Version="11.3.7" />
+		<PackageReference Include="Avalonia" Version="11.3.12" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -112,13 +112,13 @@ public unsafe partial class MpvContext
                 return;
 
             this.LogMessage.Invoke(
-                this,
-                new MpvLogMessageEventArgs(
-                    logMessage.Value.LogLevel,
-                    MarshalHelper.PtrToStringUTF8OrEmpty(logMessage.Value.Prefix),
-                    MarshalHelper.PtrToStringUTF8OrEmpty(logMessage.Value.Level),
-                    MarshalHelper.PtrToStringUTF8OrEmpty(logMessage.Value.Text)
-                    ));
+                                   this,
+                                   new MpvLogMessageEventArgs(
+                                                              logMessage.Value.LogLevel,
+                                                              MarshalHelper.PtrToStringUTF8OrEmpty(logMessage.Value.Prefix),
+                                                              MarshalHelper.PtrToStringUTF8OrEmpty(logMessage.Value.Level),
+                                                              MarshalHelper.PtrToStringUTF8OrEmpty(logMessage.Value.Text)
+                                                             ));
         }
     }
 
@@ -139,10 +139,9 @@ public unsafe partial class MpvContext
         this.Shutdown?.Invoke(this, EventArgs.Empty);
     }
 
-    Dictionary<string, List<Action>> propertyChangedActions = new Dictionary<string, List<Action>>();
+    Dictionary<string, List<Action>>       propertyChangedActions     = new Dictionary<string, List<Action>>();
     Dictionary<string, List<Action<bool>>> propertyBoolChangedActions = new Dictionary<string, List<Action<bool>>>();
 }
-
 
 public class MpvEndFileEventArgs : EventArgs
 {
@@ -159,15 +158,15 @@ public class MpvLogMessageEventArgs : EventArgs
     public MpvLogMessageEventArgs(MpvLogLevel logLevel, string prefix, string level, string text)
     {
         LogLevel = logLevel;
-        Prefix = prefix;
-        Level = level;
-        Text = text;
+        Prefix   = prefix;
+        Level    = level;
+        Text     = text;
     }
 
     public MpvLogLevel LogLevel { get; }
-    public string Prefix { get; }
-    public string Level { get; }
-    public string Text { get; }
+    public string      Prefix   { get; }
+    public string      Level    { get; }
+    public string      Text     { get; }
 }
 
 public class MpvGetPropertyReplyEventArgs : EventArgs
@@ -175,13 +174,13 @@ public class MpvGetPropertyReplyEventArgs : EventArgs
     public MpvGetPropertyReplyEventArgs(ulong replyUserData, MpvError error, MpvProperty eventData)
     {
         ReplyUserData = replyUserData;
-        Error = error;
-        EventData = eventData;
+        Error         = error;
+        EventData     = eventData;
     }
 
-    public ulong ReplyUserData { get; }
-    public MpvError Error { get; }
-    public MpvProperty EventData { get; }
+    public ulong       ReplyUserData { get; }
+    public MpvError    Error         { get; }
+    public MpvProperty EventData     { get; }
 }
 
 public class MpvSetPropertyReplyEventArgs : EventArgs
@@ -189,9 +188,9 @@ public class MpvSetPropertyReplyEventArgs : EventArgs
     public MpvSetPropertyReplyEventArgs(ulong replyUserData, MpvError error)
     {
         ReplyUserData = replyUserData;
-        Error = error;
+        Error         = error;
     }
 
-    public ulong ReplyUserData { get; }
-    public MpvError Error { get; }
+    public ulong    ReplyUserData { get; }
+    public MpvError Error         { get; }
 }

@@ -11,7 +11,9 @@ public class LinuxFunctionResolver : FunctionResolverBase
 
     protected override string GetNativeLibraryName(string libraryName, int version)
     {
-        return version > 0 ? $"{libraryName}.so.{version}" : $"{libraryName}.so";
+        return version > 0
+            ? $"{libraryName}.so.{version}"
+            : $"{libraryName}.so";
     }
 
 

@@ -8,6 +8,6 @@ public interface IFixedArray
 internal interface IFixedArray<T> : IFixedArray
 {
     T this[uint index] { get; set; }
-    T[] ToArray();
+    T[]  ToArray();
     void UpdateFrom(T[] array);
 }

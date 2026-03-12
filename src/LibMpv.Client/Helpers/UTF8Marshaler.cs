@@ -47,7 +47,7 @@ public class UTF8Marshaler : ICustomMarshaler
             return null;
 
         var start = pNativeData;
-        var walk = start;
+        var walk  = start;
 
         // Find the end of the string
         while (*walk != 0) walk++;

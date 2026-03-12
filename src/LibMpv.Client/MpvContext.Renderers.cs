@@ -22,6 +22,7 @@ public unsafe partial class MpvContext
             ConfigureSoftwareRenderer(softwareRendererConfiguartion);
             return;
         }
+
         throw new MpvException($"Not supported renderer {rendererConfiguration.MpvRenderer}");
     }
 
@@ -29,12 +30,15 @@ public unsafe partial class MpvContext
     {
         if (disposed || renderContext == null) return;
 
-        var fboArray = new MpvOpenglFbo[1] { new()
-        {
-            W = width,
-            H = height,
-            Fbo = fb
-        } };
+        var fboArray = new MpvOpenglFbo[1]
+                       {
+                           new()
+                           {
+                               W   = width,
+                               H   = height,
+                               Fbo = fb
+                           }
+                       };
 
         var flipYArray = new int[1] { flipY };
 
@@ -44,29 +48,29 @@ public unsafe partial class MpvContext
             fixed (int* flipYArrayPtr = flipYArray)
             {
                 var parameters = new MpvRenderParam[]
-                {
-                    new()
-                    {
-                        Type= MpvRenderParamType.MpvRenderParamOpenglFbo,
-                        Data = (byte*) fboArrayPtr
-                    },
-                    new()
-                    {
-                        Type= MpvRenderParamType.MpvRenderParamFlipY,
-                        Data = (byte*) flipYArrayPtr
-                    },
-                    new()
-                    {
-                        Type= MpvRenderParamType.MpvRenderParamInvalid
-                    },
-                };
+                                 {
+                                     new()
+                                     {
+                                         Type = MpvRenderParamType.MpvRenderParamOpenglFbo,
+                                         Data = (byte*)fboArrayPtr
+                                     },
+                                     new()
+                                     {
+                                         Type = MpvRenderParamType.MpvRenderParamFlipY,
+                                         Data = (byte*)flipYArrayPtr
+                                     },
+                                     new()
+                                     {
+                                         Type = MpvRenderParamType.MpvRenderParamInvalid
+                                     },
+                                 };
                 fixed (MpvRenderParam* parametersPtr = parameters)
                 {
                     result = LibMpv.MpvRenderContextRender(renderContext, parametersPtr);
                 }
-                
             }
         }
+
         if (result < 0) this.ThrowMpvError(result);
     }
 
@@ -76,49 +80,50 @@ public unsafe partial class MpvContext
 
         using MarshalHelper marshalHelper = new MarshalHelper();
 
-        var size = new int[2] { width, height };
+        var size   = new int[2] { width, height };
         var stride = new uint[1] { (uint)width * 4 };
-        
+
         int result = 0;
         fixed (int* sizePtr = size)
         {
             fixed (uint* stridePtr = stride)
             {
                 var parameters = new MpvRenderParam[]
-                {
-                    new()
-                    {
-                        Type = MpvRenderParamType.MpvRenderParamSwSize,
-                        Data = sizePtr
-                    },
-                    new ()
-                    {
-                        Type = MpvRenderParamType.MpvRenderParamSwFormat,
-                        Data = (void *) marshalHelper.CStringFromManagedUTF8String(format)
-                    },
-                    new ()
-                    {
-                        Type = MpvRenderParamType.MpvRenderParamSwStride,
-                        Data = stridePtr
-                    },
-                    new ()
-                    {
-                        Type = MpvRenderParamType.MpvRenderParamSwPointer,
-                        Data = (void*)surfaceAddress
-                    },
-                    new ()
-                    {
-                        Type = MpvRenderParamType.MpvRenderParamInvalid,
-                        Data =null
-                    }
-                };
-                
+                                 {
+                                     new()
+                                     {
+                                         Type = MpvRenderParamType.MpvRenderParamSwSize,
+                                         Data = sizePtr
+                                     },
+                                     new()
+                                     {
+                                         Type = MpvRenderParamType.MpvRenderParamSwFormat,
+                                         Data = (void*)marshalHelper.CStringFromManagedUTF8String(format)
+                                     },
+                                     new()
+                                     {
+                                         Type = MpvRenderParamType.MpvRenderParamSwStride,
+                                         Data = stridePtr
+                                     },
+                                     new()
+                                     {
+                                         Type = MpvRenderParamType.MpvRenderParamSwPointer,
+                                         Data = (void*)surfaceAddress
+                                     },
+                                     new()
+                                     {
+                                         Type = MpvRenderParamType.MpvRenderParamInvalid,
+                                         Data = null
+                                     }
+                                 };
+
                 fixed (MpvRenderParam* parametersPtr = parameters)
                 {
                     result = LibMpv.MpvRenderContextRender(renderContext, parametersPtr);
                 }
             }
         }
+
         if (result < 0) this.ThrowMpvError(result);
     }
 
@@ -128,39 +133,39 @@ public unsafe partial class MpvContext
         this.StopRendering();
 
         this.glGetProcAddress = new MpvOpenglInitParamsGetProcAddress((_, name) => (void*)glRendererConfiguartion.OpnGlGetProcAddress(name));
-        this.updateCallback = new MpvRenderContextSetUpdateCallbackCallback((_) => glRendererConfiguartion.UpdateCallback());
+        this.updateCallback   = new MpvRenderContextSetUpdateCallbackCallback((_) => glRendererConfiguartion.UpdateCallback());
 
         using MarshalHelper marshalHelper = new MarshalHelper();
 
         var parameters = new MpvRenderParam[]
-        {
-            new()
-            {
-                Type = MpvRenderParamType.MpvRenderParamApiType,
-                Data = (void*)marshalHelper.StringToHGlobalAnsi(LibMpv.MpvRenderApiTypeOpengl)
-            },
-            new()
-            {
-                Type = MpvRenderParamType.MpvRenderParamOpenglInitParams,
-                Data = (void*)marshalHelper.AllocHGlobal<MpvOpenglInitParams>(new MpvOpenglInitParams()
-                {
-                    GetProcAddress = this.glGetProcAddress,
-                    GetProcAddressCtx = null
-                })
-            },
-            new ()
-            {
-                Type = MpvRenderParamType.MpvRenderParamAdvancedControl,
-                Data = (void *) marshalHelper.AllocHGlobalValue(0)
-            },
-            new ()
-            {
-                Type = MpvRenderParamType.MpvRenderParamInvalid,
-                Data =null
-            }
-        };
+                         {
+                             new()
+                             {
+                                 Type = MpvRenderParamType.MpvRenderParamApiType,
+                                 Data = (void*)marshalHelper.StringToHGlobalAnsi(LibMpv.MpvRenderApiTypeOpengl)
+                             },
+                             new()
+                             {
+                                 Type = MpvRenderParamType.MpvRenderParamOpenglInitParams,
+                                 Data = (void*)marshalHelper.AllocHGlobal<MpvOpenglInitParams>(new MpvOpenglInitParams()
+                                                                                               {
+                                                                                                   GetProcAddress    = this.glGetProcAddress,
+                                                                                                   GetProcAddressCtx = null
+                                                                                               })
+                             },
+                             new()
+                             {
+                                 Type = MpvRenderParamType.MpvRenderParamAdvancedControl,
+                                 Data = (void*)marshalHelper.AllocHGlobalValue(0)
+                             },
+                             new()
+                             {
+                                 Type = MpvRenderParamType.MpvRenderParamInvalid,
+                                 Data = null
+                             }
+                         };
 
-        int result = 0;
+        int               result     = 0;
         MpvRenderContext* contextPtr = null;
         fixed (MpvRenderParam* parametersPtr = parameters)
         {
@@ -177,34 +182,34 @@ public unsafe partial class MpvContext
     {
         if (softwareRendererConfiguartion.UpdateCallback == null) return;
 
-        this.updateCallback = new  MpvRenderContextSetUpdateCallbackCallback((_) => softwareRendererConfiguartion.UpdateCallback());
+        this.updateCallback = new MpvRenderContextSetUpdateCallbackCallback((_) => softwareRendererConfiguartion.UpdateCallback());
 
         using MarshalHelper marshalHelper = new MarshalHelper();
 
         var parameters = new MpvRenderParam[]
-        {
-            new()
-            {
-                Type = MpvRenderParamType.MpvRenderParamApiType,
-                Data = (void*)marshalHelper.StringToHGlobalAnsi(LibMpv.MpvRenderApiTypeSw)
-            },
-            new ()
-            {
-                Type = MpvRenderParamType.MpvRenderParamAdvancedControl,
-                Data = (void *) marshalHelper.AllocHGlobalValue(0)
-            },
-            new ()
-            {
-                Type = MpvRenderParamType.MpvRenderParamInvalid,
-                Data =null
-            }
-        };
+                         {
+                             new()
+                             {
+                                 Type = MpvRenderParamType.MpvRenderParamApiType,
+                                 Data = (void*)marshalHelper.StringToHGlobalAnsi(LibMpv.MpvRenderApiTypeSw)
+                             },
+                             new()
+                             {
+                                 Type = MpvRenderParamType.MpvRenderParamAdvancedControl,
+                                 Data = (void*)marshalHelper.AllocHGlobalValue(0)
+                             },
+                             new()
+                             {
+                                 Type = MpvRenderParamType.MpvRenderParamInvalid,
+                                 Data = null
+                             }
+                         };
 
-        int result = 0;
+        int               result     = 0;
         MpvRenderContext* contextPtr = null;
         fixed (MpvRenderParam* parametersPtr = parameters)
         {
-            result =  LibMpv.MpvRenderContextCreate((MpvRenderContext**)&contextPtr, handle, parametersPtr);
+            result = LibMpv.MpvRenderContextCreate((MpvRenderContext**)&contextPtr, handle, parametersPtr);
         }
 
         if (result < 0) this.ThrowMpvError(result);
@@ -235,11 +240,11 @@ public unsafe partial class MpvContext
     }
 
     private MpvRenderContextSetUpdateCallbackCallback updateCallback;
-    private MpvOpenglInitParamsGetProcAddress glGetProcAddress;
+    private MpvOpenglInitParamsGetProcAddress         glGetProcAddress;
 }
 
-
 public delegate nint OpenGlGetProcAddressDelegate(string name);
+
 public delegate void UpdateCallbackDelegate();
 
 public enum MpvRenderer
@@ -256,8 +261,8 @@ public interface IMpvRendererConfiguration
 
 public class NativeRendererConfiguration : IMpvRendererConfiguration
 {
-    public IntPtr WindowHandle { get; set; } = IntPtr.Zero;
-    public MpvRenderer MpvRenderer => MpvRenderer.Native;
+    public IntPtr      WindowHandle { get; set; } = IntPtr.Zero;
+    public MpvRenderer MpvRenderer  => MpvRenderer.Native;
 }
 
 public class SoftwareRendererConfiguartion : IMpvRendererConfiguration
@@ -270,10 +275,8 @@ public class SoftwareRendererConfiguartion : IMpvRendererConfiguration
 public class OpenGlRendererConfiguration : IMpvRendererConfiguration
 {
     public UpdateCallbackDelegate UpdateCallback { get; set; } = null;
- 
+
     public OpenGlGetProcAddressDelegate OpnGlGetProcAddress { get; set; } = null;
 
     public MpvRenderer MpvRenderer => MpvRenderer.OpenGl;
 }
-
-

@@ -4,4 +4,3 @@ public interface IMpvVideoView
 {
     public MpvContext? MpvContext { get; set; }
 }
-

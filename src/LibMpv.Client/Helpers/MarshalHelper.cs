@@ -46,11 +46,12 @@ public unsafe class MarshalHelper : IDisposable
 
     struct AllocBlock
     {
-        public bool isHGlobal;
+        public bool   isHGlobal;
         public IntPtr intPtr;
-        public AllocBlock(IntPtr intPtr, bool isHGlobal=true)
+
+        public AllocBlock(IntPtr intPtr, bool isHGlobal = true)
         {
-            this.intPtr = intPtr;
+            this.intPtr    = intPtr;
             this.isHGlobal = isHGlobal;
         }
     }
@@ -61,7 +62,7 @@ public unsafe class MarshalHelper : IDisposable
     {
         @string += '\0';
 
-        var stringBytes = Encoding.UTF8.GetBytes(@string);
+        var stringBytes      = Encoding.UTF8.GetBytes(@string);
         var stringBytesCount = stringBytes.Length;
 
         var stringPtr = Marshal.AllocCoTaskMem(stringBytesCount);
@@ -82,7 +83,7 @@ public unsafe class MarshalHelper : IDisposable
 
         for (var index = 0; index < inArray.Length; index++)
         {
-            var currentString = inArray[index];
+            var currentString    = inArray[index];
             var currentStringPtr = CStringFromManagedUTF8String(currentString);
 
             outArray[index] = currentStringPtr;
@@ -126,16 +127,18 @@ public unsafe class MarshalHelper : IDisposable
         toBeFree.Add(new AllocBlock(ptr));
         return ptr;
     }
+
     public void Dispose()
     {
         if (disposed) return;
-        foreach(var item in toBeFree)
+        foreach (var item in toBeFree)
         {
             if (item.isHGlobal)
                 Marshal.FreeHGlobal(item.intPtr);
             else
                 Marshal.FreeCoTaskMem(item.intPtr);
         }
+
         disposed = true;
     }
 }

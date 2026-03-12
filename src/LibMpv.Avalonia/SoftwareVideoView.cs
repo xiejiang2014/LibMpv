@@ -17,20 +17,20 @@ public class SoftwareVideoView : Control
     private MpvContext? mpvContext = null;
 
     public static readonly DirectProperty<SoftwareVideoView, MpvContext?> MpvContextProperty =
-           AvaloniaProperty.RegisterDirect<SoftwareVideoView, MpvContext?>(
-               nameof(MpvContext),
-               o => o.MpvContext,
-               (o, v) => o.MpvContext = v,
-               defaultBindingMode: BindingMode.TwoWay);
+        AvaloniaProperty.RegisterDirect<SoftwareVideoView, MpvContext?>(
+                                                                        nameof(MpvContext),
+                                                                        o => o.MpvContext,
+                                                                        (o, v) => o.MpvContext = v,
+                                                                        defaultBindingMode: BindingMode.TwoWay);
 
     public MpvContext? MpvContext
     {
         get { return mpvContext; }
         set
         {
-            if (ReferenceEquals(value, mpvContext)) 
+            if (ReferenceEquals(value, mpvContext))
                 return;
-            
+
             mpvContext?.StopRendering();
             mpvContext = value;
 
@@ -57,13 +57,14 @@ public class SoftwareVideoView : Control
         {
             mpvContext.RenderBitmap(lockedBitmap.Size.Width, lockedBitmap.Size.Height, lockedBitmap.Address, "rgba");
         }
+
         context.DrawImage(this.renderTarget, new Rect(0, 0, renderTarget.PixelSize.Width, renderTarget.PixelSize.Height));
     }
 
     private PixelSize GetPixelSize()
     {
         var scaling = VisualRoot!.RenderScaling;
-        return new PixelSize(Math.Max(1,(int)Bounds.Width), Math.Max(1,(int)Bounds.Height));
+        return new PixelSize(Math.Max(1, (int)Bounds.Width), Math.Max(1, (int)Bounds.Height));
     }
 
     private void UpdateVideoView()
@@ -71,4 +72,3 @@ public class SoftwareVideoView : Control
         Dispatcher.UIThread.Post(this.InvalidateVisual, DispatcherPriority.Background);
     }
 }
-

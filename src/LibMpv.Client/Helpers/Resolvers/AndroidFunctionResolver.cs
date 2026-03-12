@@ -11,8 +11,10 @@ public class AndroidFunctionResolver : FunctionResolverBase
 
     protected override string GetNativeLibraryName(string libraryName, int version)
     {
-        return version > 0 ? $"{libraryName}.so.{version}" : $"{libraryName}.so";
-    } 
+        return version > 0
+            ? $"{libraryName}.so.{version}"
+            : $"{libraryName}.so";
+    }
 
     protected override IntPtr LoadNativeLibrary(string libraryName) => dlopen(libraryName, RTLD_NOW);
 

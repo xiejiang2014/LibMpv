@@ -57,19 +57,19 @@ public abstract class FunctionResolverBase : IFunctionResolver
 
             var dependencies = LibraryDependenciesMap[libraryName];
             dependencies.Where(n => !_loadedLibraries.ContainsKey(n) && !n.Equals(libraryName))
-                .ToList()
-                .ForEach(n => GetOrLoadLibrary(n, false));
+                        .ToList()
+                        .ForEach(n => GetOrLoadLibrary(n, false));
 
-            var version = LibMpv.LibraryVersionMap[libraryName];
+            var version           = LibMpv.LibraryVersionMap[libraryName];
             var nativeLibraryName = GetNativeLibraryName(libraryName, version);
-            var libraryPath = Path.Combine(LibMpv.RootPath, nativeLibraryName);
+            var libraryPath       = Path.Combine(LibMpv.RootPath, nativeLibraryName);
             ptr = LoadNativeLibrary(libraryPath);
 
             if (ptr != IntPtr.Zero) _loadedLibraries.Add(libraryName, ptr);
             else if (throwOnError)
             {
                 throw new DllNotFoundException(
-                    $"Unable to load DLL '{libraryName}.{version} under {LibMpv.RootPath}': The specified module could not be found.");
+                                               $"Unable to load DLL '{libraryName}.{version} under {LibMpv.RootPath}': The specified module could not be found.");
             }
 
             return ptr;
@@ -77,6 +77,6 @@ public abstract class FunctionResolverBase : IFunctionResolver
     }
 
     protected abstract string GetNativeLibraryName(string libraryName, int version);
-    protected abstract IntPtr LoadNativeLibrary(string libraryName);
-    protected abstract IntPtr FindFunctionPointer(IntPtr nativeLibraryHandle, string functionName);
+    protected abstract IntPtr LoadNativeLibrary(string    libraryName);
+    protected abstract IntPtr FindFunctionPointer(IntPtr  nativeLibraryHandle, string functionName);
 }

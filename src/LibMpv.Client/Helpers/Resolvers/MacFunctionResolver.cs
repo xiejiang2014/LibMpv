@@ -14,7 +14,8 @@ public class MacFunctionResolver : FunctionResolverBase
         if (version > 0) return $"{libraryName}.{version}.dylib";
         return $"{libraryName}.dylib";
     }
-    protected override IntPtr LoadNativeLibrary(string libraryName) => dlopen(libraryName, RTLD_NOW);
+
+    protected override IntPtr LoadNativeLibrary(string   libraryName)                              => dlopen(libraryName, RTLD_NOW);
     protected override IntPtr FindFunctionPointer(IntPtr nativeLibraryHandle, string functionName) => dlsym(nativeLibraryHandle, functionName);
 
 

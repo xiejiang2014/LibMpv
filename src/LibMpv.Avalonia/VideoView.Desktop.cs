@@ -11,11 +11,11 @@ namespace LibMpv.Avalonia;
 public class VideoView : OpenGlControlBase, IMpvVideoView
 {
     public static readonly DirectProperty<VideoView, MpvContext?> MpvContextProperty =
-      AvaloniaProperty.RegisterDirect<VideoView, MpvContext?>(
-             nameof(MpvContext),
-             o => o.MpvContext,
-             (o, v) => o.MpvContext = v,
-             defaultBindingMode: BindingMode.TwoWay);
+        AvaloniaProperty.RegisterDirect<VideoView, MpvContext?>(
+                                                                nameof(MpvContext),
+                                                                o => o.MpvContext,
+                                                                (o, v) => o.MpvContext = v,
+                                                                defaultBindingMode: BindingMode.TwoWay);
 
     public MpvContext? MpvContext
     {
@@ -37,8 +37,8 @@ public class VideoView : OpenGlControlBase, IMpvVideoView
         if (mpvContext != null && getProcAddres != null)
         {
             var scaling = VisualRoot!.RenderScaling;
-            var width = Math.Max(1, (int)(Bounds.Width * scaling));
-            var height = Math.Max(1, (int)(Bounds.Height * scaling));
+            var width   = Math.Max(1, (int)(Bounds.Width  * scaling));
+            var height  = Math.Max(1, (int)(Bounds.Height * scaling));
             mpvContext.RenderOpenGl(width, height, fbo, 1);
         }
     }
@@ -78,6 +78,6 @@ public class VideoView : OpenGlControlBase, IMpvVideoView
         Dispatcher.UIThread.InvokeAsync(this.RequestNextFrameRendering, DispatcherPriority.Background);
     }
 
-    private MpvContext? mpvContext = null;
+    private MpvContext?                  mpvContext = null;
     private OpenGlGetProcAddressDelegate getProcAddres;
 }

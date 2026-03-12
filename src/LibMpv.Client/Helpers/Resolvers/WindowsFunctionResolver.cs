@@ -13,7 +13,7 @@ public class WindowsFunctionResolver : FunctionResolverBase
         return $"{libraryName}.dll";
     }
 
-    protected override IntPtr LoadNativeLibrary(string libraryName) => LoadLibrary(libraryName);
+    protected override IntPtr LoadNativeLibrary(string   libraryName)                              => LoadLibrary(libraryName);
     protected override IntPtr FindFunctionPointer(IntPtr nativeLibraryHandle, string functionName) => GetProcAddress(nativeLibraryHandle, functionName);
 
 

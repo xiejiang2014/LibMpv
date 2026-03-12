@@ -13,6 +13,7 @@ public enum PlayerState
     Playing,
 
     Paused,
+
     /// <summary>
     /// 播放完毕
     /// </summary>

@@ -6,26 +6,26 @@ using LibMpv.Client;
 
 namespace LibMpv.Avalonia;
 
-public class NativeVideoView: NativeControlHost, IMpvVideoView
+public class NativeVideoView : NativeControlHost, IMpvVideoView
 {
     public static readonly DirectProperty<NativeVideoView, MpvContext?> MpvContextProperty =
         AvaloniaProperty.RegisterDirect<NativeVideoView, MpvContext?>(
-               nameof(MpvContext),
-               o => o.MpvContext,
-               (o, v) => o.MpvContext = v,
-               defaultBindingMode: BindingMode.TwoWay);
+                                                                      nameof(MpvContext),
+                                                                      o => o.MpvContext,
+                                                                      (o, v) => o.MpvContext = v,
+                                                                      defaultBindingMode: BindingMode.TwoWay);
 
     public MpvContext? MpvContext
     {
         get { return mpvContext; }
         set
         {
-            if (ReferenceEquals(value, mpvContext)) 
+            if (ReferenceEquals(value, mpvContext))
                 return;
             if (mpvContext != null)
                 DetachMpvContext(mpvContext);
             mpvContext = value;
-            if (mpvContext!=null)
+            if (mpvContext != null)
                 AttachMpvContext(mpvContext);
         }
     }
@@ -55,12 +55,13 @@ public class NativeVideoView: NativeControlHost, IMpvVideoView
     {
         if (mpvContext != null)
         {
-            DetachMpvContext (mpvContext);
+            DetachMpvContext(mpvContext);
             mpvContext = null;
         }
+
         platformHandle = null;
     }
 
     private IPlatformHandle? platformHandle = null;
-    private MpvContext? mpvContext = null;
+    private MpvContext?      mpvContext     = null;
 }

@@ -2,25 +2,25 @@
 
 internal unsafe class MpvEventLoop : IDisposable
 {
-    private bool disposed = false;
-    private bool isRunning = false;
-    private MpvHandle* handle = null;
-    private Action<MpvEvent> eventHandler = null;
-    private Task eventLoopTask = null;
+    private bool             disposed      = false;
+    private bool             isRunning     = false;
+    private MpvHandle*       handle        = null;
+    private Action<MpvEvent> eventHandler  = null;
+    private Task             eventLoopTask = null;
 
     public MpvEventLoop(MpvHandle* handle, Action<MpvEvent> eventHandler)
     {
-        this.handle = handle;
+        this.handle       = handle;
         this.eventHandler = eventHandler;
     }
 
     public void Start()
     {
-        if(!this.disposed)
+        if (!this.disposed)
         {
             this.DisposeEventLoopTask();
-            this.isRunning = true;
-            this.eventLoopTask = Task.Factory.StartNew( new Action(EventLoop), TaskCreationOptions.LongRunning  | TaskCreationOptions.DenyChildAttach);
+            this.isRunning     = true;
+            this.eventLoopTask = Task.Factory.StartNew(new Action(EventLoop), TaskCreationOptions.LongRunning | TaskCreationOptions.DenyChildAttach);
         }
     }
 
@@ -40,7 +40,7 @@ internal unsafe class MpvEventLoop : IDisposable
         {
             while (this.isRunning)
             {
-                MpvEvent* mpvEvent  = LibMpv.MpvWaitEvent(handle, -1.0);
+                MpvEvent* mpvEvent = LibMpv.MpvWaitEvent(handle, -1.0);
                 if (mpvEvent != null)
                 {
                     if (mpvEvent->EventId != MpvEventId.MpvEventNone)
@@ -67,6 +67,7 @@ internal unsafe class MpvEventLoop : IDisposable
         catch
         {
         }
+
         this.isRunning = false;
     }
 
@@ -75,7 +76,7 @@ internal unsafe class MpvEventLoop : IDisposable
         isRunning = false;
         try
         {
-            if (this.eventLoopTask!=null)
+            if (this.eventLoopTask != null)
             {
                 this.eventLoopTask.Dispose();
                 this.eventLoopTask = null;
@@ -83,7 +84,6 @@ internal unsafe class MpvEventLoop : IDisposable
         }
         catch
         {
-
         }
     }
 
@@ -101,8 +101,8 @@ internal unsafe class MpvEventLoop : IDisposable
                 if (isRunning)
                     Stop();
             }
+
             this.disposed = true;
         }
     }
 }
-

@@ -8,14 +8,14 @@ using System;
 
 namespace LibMpv.Avalonia;
 
-public class OpnGlVideoView: OpenGlControlBase, IMpvVideoView
+public class OpnGlVideoView : OpenGlControlBase, IMpvVideoView
 {
     public static readonly DirectProperty<OpnGlVideoView, MpvContext?> MpvContextProperty =
-      AvaloniaProperty.RegisterDirect<OpnGlVideoView, MpvContext?>(
-             nameof(MpvContext),
-             o => o.MpvContext,
-             (o, v) => o.MpvContext = v,
-             defaultBindingMode: BindingMode.TwoWay);
+        AvaloniaProperty.RegisterDirect<OpnGlVideoView, MpvContext?>(
+                                                                     nameof(MpvContext),
+                                                                     o => o.MpvContext,
+                                                                     (o, v) => o.MpvContext = v,
+                                                                     defaultBindingMode: BindingMode.TwoWay);
 
     public MpvContext? MpvContext
     {
@@ -34,11 +34,11 @@ public class OpnGlVideoView: OpenGlControlBase, IMpvVideoView
 
     protected override void OnOpenGlRender(GlInterface gl, int fbo)
     {
-        if (mpvContext!=null && getProcAddres!=null)
+        if (mpvContext != null && getProcAddres != null)
         {
             var scaling = VisualRoot!.RenderScaling;
-            var width = Math.Max(1, (int)(Bounds.Width * scaling));
-            var height = Math.Max(1, (int)(Bounds.Height * scaling));
+            var width   = Math.Max(1, (int)(Bounds.Width  * scaling));
+            var height  = Math.Max(1, (int)(Bounds.Height * scaling));
             mpvContext.RenderOpenGl(width, height, fbo, 1);
         }
     }
@@ -65,9 +65,9 @@ public class OpnGlVideoView: OpenGlControlBase, IMpvVideoView
     protected override void OnOpenGlInit(GlInterface gl)
     {
         if (getProcAddres != null) return;
-    
+
         getProcAddres = gl.GetProcAddress;
-        if (mpvContext!=null)
+        if (mpvContext != null)
         {
             AttachMpvContext(mpvContext);
         }
@@ -78,6 +78,6 @@ public class OpnGlVideoView: OpenGlControlBase, IMpvVideoView
         Dispatcher.UIThread.InvokeAsync(this.RequestNextFrameRendering, DispatcherPriority.Background);
     }
 
-    private MpvContext? mpvContext = null;
+    private MpvContext?                  mpvContext = null;
     private OpenGlGetProcAddressDelegate getProcAddres;
 }

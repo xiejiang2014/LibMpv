@@ -5,7 +5,7 @@ namespace LibMpv.Client;
 public class ConstCharPtrMarshaler : ICustomMarshaler
 {
     private static readonly ConstCharPtrMarshaler Instance = new();
-    public object MarshalNativeToManaged(IntPtr pNativeData) => Marshal.PtrToStringAnsi(pNativeData);
+    public                  object                MarshalNativeToManaged(IntPtr pNativeData) => Marshal.PtrToStringAnsi(pNativeData);
 
     public IntPtr MarshalManagedToNative(object managedObj) => IntPtr.Zero;
 
